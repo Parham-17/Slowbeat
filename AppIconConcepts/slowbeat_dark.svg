@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!--
+    Slowbeat app icon — dark variant.
+    Radii 120 / 90 / 60 / 30 form a perfect 1:2:3:4 arithmetic progression
+    (each circle adds 30 units, equals 25% / 50% / 75% / 100% of the largest).
+    Vertical gap between circles = 30 = same as the smallest radius.
+    Composition is centred vertically.
+  -->
+  <defs>
+    <linearGradient id="bgDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A0D24"/>
+      <stop offset="100%" stop-color="#1A1238"/>
+    </linearGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <filter id="innerHighlight" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+
+  <!-- Background gradient matching the app's dark mode -->
+  <rect width="1024" height="1024" fill="url(#bgDark)"/>
+
+  <!-- Soft halo glow under each dot — ties to the in-app breathing halo -->
+  <circle cx="512" cy="287" r="128" fill="#F5B8B8" opacity="0.32" filter="url(#softGlow)"/>
+  <circle cx="512" cy="527" r="98"  fill="#BFB3FA" opacity="0.32" filter="url(#softGlow)"/>
+  <circle cx="512" cy="707" r="68"  fill="#80CCC8" opacity="0.32" filter="url(#softGlow)"/>
+  <circle cx="512" cy="827" r="38"  fill="#6B80CC" opacity="0.32" filter="url(#softGlow)"/>
+
+  <!-- Solid dots — 1:2:3:4 progression, top-to-bottom -->
+  <!-- 1. r=120 — sunset rose (inhale / flat mood — receiving warmth) -->
+  <circle cx="512" cy="287" r="120" fill="#F5B8B8"/>
+  <!-- 2. r=90 — soft lavender (hold full / settled — brand base) -->
+  <circle cx="512" cy="527" r="90"  fill="#BFB3FA"/>
+  <!-- 3. r=60 — soft teal (exhale / energized — restorative) -->
+  <circle cx="512" cy="707" r="60"  fill="#80CCC8"/>
+  <!-- 4. r=30 — deep indigo (rest / anxious — grounded, anchored) -->
+  <circle cx="512" cy="827" r="30"  fill="#6B80CC"/>
+
+  <!-- Subtle upper-left highlight on each dot — implies a single light source,
+       gives the dots a 3D sphere feel rather than flat discs. Offset and size
+       scale proportionally with each circle. -->
+  <circle cx="475" cy="258" r="24" fill="#FFFFFF" opacity="0.25" filter="url(#innerHighlight)"/>
+  <circle cx="484" cy="505" r="18" fill="#FFFFFF" opacity="0.22" filter="url(#innerHighlight)"/>
+  <circle cx="494" cy="692" r="12" fill="#FFFFFF" opacity="0.20" filter="url(#innerHighlight)"/>
+  <circle cx="503" cy="820" r="6"  fill="#FFFFFF" opacity="0.18" filter="url(#innerHighlight)"/>
+</svg>

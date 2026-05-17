@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!--
+    Slowbeat app icon — light variant.
+    Same 1:2:3:4 size progression as the dark variant. Background swapped
+    to the app's light-mode gradient; halo and highlight opacities slightly
+    raised so the dots register on the brighter canvas.
+  -->
+  <defs>
+    <linearGradient id="bgLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAF5FC"/>
+      <stop offset="100%" stop-color="#EAEAFA"/>
+    </linearGradient>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <filter id="innerHighlight" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+
+  <!-- Background gradient matching the app's light mode -->
+  <rect width="1024" height="1024" fill="url(#bgLight)"/>
+
+  <!-- Halo glows — slightly higher opacity to register on the light bg -->
+  <circle cx="512" cy="287" r="128" fill="#F5B8B8" opacity="0.45" filter="url(#softGlow)"/>
+  <circle cx="512" cy="527" r="98"  fill="#BFB3FA" opacity="0.45" filter="url(#softGlow)"/>
+  <circle cx="512" cy="707" r="68"  fill="#80CCC8" opacity="0.45" filter="url(#softGlow)"/>
+  <circle cx="512" cy="827" r="38"  fill="#6B80CC" opacity="0.45" filter="url(#softGlow)"/>
+
+  <!-- Solid dots — same 4 colours as the dark variant for brand consistency -->
+  <circle cx="512" cy="287" r="120" fill="#F5B8B8"/>
+  <circle cx="512" cy="527" r="90"  fill="#BFB3FA"/>
+  <circle cx="512" cy="707" r="60"  fill="#80CCC8"/>
+  <circle cx="512" cy="827" r="30"  fill="#6B80CC"/>
+
+  <!-- Upper-left highlights — lighter on the light bg -->
+  <circle cx="475" cy="258" r="24" fill="#FFFFFF" opacity="0.35" filter="url(#innerHighlight)"/>
+  <circle cx="484" cy="505" r="18" fill="#FFFFFF" opacity="0.32" filter="url(#innerHighlight)"/>
+  <circle cx="494" cy="692" r="12" fill="#FFFFFF" opacity="0.28" filter="url(#innerHighlight)"/>
+  <circle cx="503" cy="820" r="6"  fill="#FFFFFF" opacity="0.25" filter="url(#innerHighlight)"/>
+</svg>
