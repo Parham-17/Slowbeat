@@ -1,0 +1,48 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Xcode build artifacts
+build/
+DerivedData/
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Xcode user-specific
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad
+*.moved-aside
+
+# Xcode project (user-specific bits)
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
+Package.pins
+Package.resolved
+
+# CocoaPods / Carthage (not used here, but defensive)
+Pods/
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Archived git from before the Slowbeat rename — local backup only.
+Pulse/.git.archived-pre-slowbeat/
+
+# Editor backups
+*.swp
+*.swo
+*~

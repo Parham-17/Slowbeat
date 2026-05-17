@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E1230"/>
+      <stop offset="100%" stop-color="#2A1F4A"/>
+    </linearGradient>
+    <radialGradient id="haloOuter" cx="50%" cy="48%" r="55%">
+      <stop offset="0%" stop-color="#FAC7EB" stop-opacity="0.65"/>
+      <stop offset="55%" stop-color="#BFB3FA" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#BFB3FA" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="core" cx="50%" cy="44%" r="48%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#FAC7EB" stop-opacity="0.85"/>
+      <stop offset="85%" stop-color="#BFB3FA" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#BFB3FA" stop-opacity="0.10"/>
+    </radialGradient>
+    <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="30"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Wide outer glow -->
+  <circle cx="512" cy="512" r="440" fill="url(#haloOuter)" filter="url(#softBlur)"/>
+
+  <!-- Main breathing orb -->
+  <circle cx="512" cy="500" r="280" fill="url(#core)"/>
+
+  <!-- Thin halo ring -->
+  <circle cx="512" cy="500" r="280" fill="none" stroke="#FFFFFF" stroke-opacity="0.20" stroke-width="2"/>
+
+  <!-- Inner bright dot -->
+  <circle cx="500" cy="480" r="60" fill="#FFFFFF" fill-opacity="0.45" filter="url(#softBlur)"/>
+</svg>
