@@ -5,13 +5,10 @@ struct RitualIntroView: View {
     @Binding var preMood: PreMood?
     var onBegin: () -> Void
 
-    @Environment(AppState.self) private var app
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 eventHeader
-                heartContext
                 moodPicker
                 Spacer(minLength: 24)
                 PulseButton(title: "Begin 60 seconds", systemImage: "wind", style: .warm) {
@@ -58,29 +55,6 @@ struct RitualIntroView: View {
         if minutes <= 0 { return "Now" }
         if minutes < 60 { return "In \(minutes) minutes" }
         return event.start.formatted(date: .omitted, time: .shortened)
-    }
-
-    @ViewBuilder
-    private var heartContext: some View {
-        if app.health.hasFreshReading, let bpm = app.health.latestHeartRate {
-            GlassCard(padding: 16) {
-                HStack(spacing: 12) {
-                    Image(systemName: "heart.fill")
-                        .foregroundStyle(Theme.warmA)
-                        .font(.system(size: 18))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(Int(bpm)) bpm")
-                            .font(PulseType.headline())
-                            .foregroundStyle(Theme.inkPrimary)
-                        Text("Your most recent reading.")
-                            .font(PulseType.caption())
-                            .foregroundStyle(Theme.inkTertiary)
-                    }
-                    Spacer()
-                }
-            }
-            .accessibilityLabel("Most recent heart rate \(Int(bpm)) beats per minute")
-        }
     }
 
     private var moodPicker: some View {

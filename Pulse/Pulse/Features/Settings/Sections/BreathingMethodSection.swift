@@ -32,7 +32,7 @@ struct BreathingMethodSection: View {
             PulseStorage.save(context, reason: "breathing method changed")
             UISelectionFeedbackGenerator().selectionChanged()
             // Push the new pattern key to widget + watch so external surfaces stay in sync.
-            app.publishExternalSurfaces(settings: settings)
+            app.publishExternalSurfaces(settings: settings, modelContext: context)
         } label: {
             HStack(alignment: .top, spacing: 14) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")

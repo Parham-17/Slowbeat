@@ -9,7 +9,6 @@ import UserNotifications
 @Observable
 final class AppState {
     let calendar  = CalendarService()
-    let health    = HealthService()
     let notifier  = NotificationService()
     let watchSync = PhoneSyncService()
 
@@ -39,16 +38,28 @@ final class AppState {
         let settings = ensureSettings(in: modelContext)
         await refreshPermissions()
         await calendar.loadUpcoming(monitoring: effectiveCategories(for: settings))
-        await health.loadLatest()
         if settings.notificationsEnabled {
             await notifier.reschedule(
                 for: calendar.upcoming,
                 minutesBefore: settings.reminderMinutesBefore
             )
         }
-        publishExternalSurfaces(settings: settings)
+        publishExternalSurfaces(settings: settings, modelContext: modelContext)
         // Drain any breath sessions the watch shipped over while we were closed.
-        PhoneSyncService.drainSessionInbox(into: modelContext)
+        PhoneSyncService.drainSessionInbox(into: modelContext, settings: settings)
+        // Republish so the freshly-drained sessions show up in the watch's Recent tab.
+        publishExternalSurfaces(settings: settings, modelContext: modelContext)
+        // Reactive drain: if the watch ships a session while the iPhone is in
+        // the foreground, WCSession's delegate fires `didReceiveUserInfo` and
+        // calls this closure on the main actor. Without it, the inbox would
+        // sit untouched until the next scenePhase active transition and
+        // History wouldn't refresh.
+        watchSync.onUserInfoArrived = { [weak self] in
+            guard let self else { return }
+            let settings = self.ensureSettings(in: modelContext)
+            PhoneSyncService.drainSessionInbox(into: modelContext, settings: settings)
+            self.publishExternalSurfaces(settings: settings, modelContext: modelContext)
+        }
         // End any breath Live Activities left over from a killed-mid-breath previous
         // run. Skip if a ritual is currently active — bootstrap fires on every
         // scenePhase active, and we don't want to kill the Live Activity for a breath
@@ -58,10 +69,11 @@ final class AppState {
         }
     }
 
-    /// Publishes the current next-event + pattern to both external surfaces (widget
-    /// App Group + paired Apple Watch). Call after any change to calendar.upcoming
-    /// or settings.breathingPattern.
-    func publishExternalSurfaces(settings: PulseSettings) {
+    /// Publishes the current next-event + ongoing-event + pattern + settings +
+    /// recent sessions to both external surfaces (widget App Group + paired
+    /// Apple Watch). Call after any change to calendar.upcoming, settings, or
+    /// after a new session lands.
+    func publishExternalSurfaces(settings: PulseSettings, modelContext: ModelContext) {
         publishWidgetSnapshot()
         let firstEvent = calendar.upcoming.first.map { event in
             WidgetSnapshot.Event(
@@ -72,7 +84,35 @@ final class AppState {
                 categorySymbolName: event.suggestedCategory.symbol
             )
         }
-        watchSync.publish(nextEvent: firstEvent, patternKey: settings.breathingPattern.key.rawValue)
+        let ongoingEvent = calendar.ongoing.map { event in
+            WidgetSnapshot.Event(
+                id: event.id,
+                title: event.title,
+                start: event.start,
+                accentHex: event.suggestedCategory.accent.hexString(),
+                categorySymbolName: event.suggestedCategory.symbol
+            )
+        }
+        let recent = recentSessions(in: modelContext)
+        watchSync.publish(
+            nextEvent:    firstEvent,
+            ongoingEvent: ongoingEvent,
+            ongoingEnd:   calendar.ongoing?.end,
+            patternKey:   settings.breathingPattern.key.rawValue,
+            haptics:      settings.haptics,
+            eyesUp:       settings.eyesUp,
+            recent:       recent
+        )
+    }
+
+    /// Five most-recent completed sessions, newest first, as the wire-format DTO.
+    private func recentSessions(in context: ModelContext) -> [RecentSessionDTO] {
+        var descriptor = FetchDescriptor<BreathingSession>(
+            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = 5
+        guard let sessions = try? context.fetch(descriptor) else { return [] }
+        return sessions.map(RecentSessionDTO.init(session:))
     }
 
     /// The set of categories to filter the calendar against, honoring an active Focus
@@ -106,8 +146,6 @@ final class AppState {
     private func refreshPermissions() async {
         calendar.refreshAccessStatus()
         await notifier.refreshAccessStatus()
-        // HealthKit deliberately does not expose read-permission status (Apple privacy
-        // design) — there's no equivalent refresh; access is inferred by query attempts.
     }
 
     func ensureSettings(in context: ModelContext) -> PulseSettings {
@@ -141,7 +179,11 @@ final class AppState {
         }
         let event = UpcomingEvent(
             id: "manual-\(UUID().uuidString)",
-            title: "A moment for you",
+            // Time-of-day title (Morning breath / Evening breath / …) so a
+            // Moments list of generic sessions isn't five identical rows.
+            // See SessionTitle for the rationale on keeping the vocabulary
+            // small.
+            title: SessionTitle.generic(),
             start: .now.addingTimeInterval(60),
             end: .now.addingTimeInterval(60 * 30),
             suggestedCategory: .other,

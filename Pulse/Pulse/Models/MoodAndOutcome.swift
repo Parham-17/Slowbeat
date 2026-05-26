@@ -30,6 +30,19 @@ enum PreMood: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// Tint for chart segments, chips, and mood pills. Mirrors the watch's
+    /// `WatchTheme.accent(for:)` palette so the same emotional state reads
+    /// in the same color on both devices — visual continuity matters more
+    /// here than fitting into the existing iPhone Theme tokens.
+    var tint: Color {
+        switch self {
+        case .anxious:   return Color(red: 0.42, green: 0.50, blue: 0.80)  // indigo
+        case .energized: return Color(red: 0.50, green: 0.80, blue: 0.78)  // teal
+        case .settled:   return Color(red: 0.68, green: 0.66, blue: 0.88)  // lavender
+        case .flat:      return Color(red: 0.96, green: 0.72, blue: 0.72)  // rose
+        }
+    }
+
     /// Russell circumplex coordinates. Range [-1, 1] on each axis.
     var valence: Double {
         switch self {

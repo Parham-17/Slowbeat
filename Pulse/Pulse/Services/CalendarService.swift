@@ -11,6 +11,11 @@ final class CalendarService {
     private let store = EKEventStore()
     var access: Access = .unknown
     var upcoming: [UpcomingEvent] = []
+    /// The one calendar event the user is currently inside (start ≤ now < end).
+    /// Lets the watch/widget surface a "happening now" badge without the user
+    /// having to fish for context. Pulse never persists this — it's recomputed
+    /// from EventKit on each `loadUpcoming` call.
+    var ongoing: UpcomingEvent?
 
     private var storeObserver: NSObjectProtocol?
 
@@ -69,10 +74,15 @@ final class CalendarService {
 
     /// Pulls events between now and 48h ahead, filtering by the user's monitored categories
     /// (passed in so we don't reach back into SwiftData from here).
+    ///
+    /// Produces two outputs in one fetch:
+    ///   • `upcoming` — future events (`start > now`), sorted earliest first
+    ///   • `ongoing`  — the single event the user is currently inside (`start ≤ now < end`)
     func loadUpcoming(monitoring: Set<EventCategory>) async {
         refreshAccessStatus()
         guard access == .granted else {
             upcoming = []
+            ongoing = nil
             return
         }
         let calendars = store.calendars(for: .event)
@@ -81,21 +91,24 @@ final class CalendarService {
         let predicate = store.predicateForEvents(withStart: now, end: end, calendars: calendars)
         let events = store.events(matching: predicate)
 
-        let mapped: [UpcomingEvent] = events.compactMap { event in
+        // Map every event once into UpcomingEvent (with a flag for "is in progress")
+        // so we can route them into the right bucket without double-walking.
+        struct MappedEvent {
+            let event: UpcomingEvent
+            let isInProgress: Bool
+        }
+
+        let mapped: [MappedEvent] = events.compactMap { event in
             guard let title = event.title?.trimmingCharacters(in: .whitespaces), !title.isEmpty else { return nil }
             guard let start = event.startDate, let end = event.endDate else { return nil }
             guard event.isAllDay == false else { return nil }
             guard event.isDeclinedByCurrentUser == false else { return nil }
-            // EventKit's predicate returns events that overlap [now, now+48h], so an event
-            // that started in the past but is still running would otherwise be "Next up".
-            // Pulse is a pre-event ritual — once a moment has started, it's no longer next.
-            guard start > now else { return nil }
 
             let suggested = EventCategory.suggest(for: title)
             if monitoring.isEmpty == false, monitoring.contains(suggested) == false {
                 return nil
             }
-            return UpcomingEvent(
+            let projection = UpcomingEvent(
                 id: event.eventIdentifier ?? UUID().uuidString,
                 title: title,
                 start: start,
@@ -103,8 +116,21 @@ final class CalendarService {
                 suggestedCategory: suggested,
                 location: event.location?.isEmpty == false ? event.location : nil
             )
+            return MappedEvent(event: projection, isInProgress: start <= now && end > now)
         }
-        upcoming = Self.deduplicated(mapped.sorted { $0.start < $1.start })
+
+        // Ongoing: the earliest-started in-progress event (most relevant).
+        ongoing = mapped
+            .filter { $0.isInProgress }
+            .sorted { $0.event.start < $1.event.start }
+            .first?.event
+
+        // Upcoming: future events, deduped.
+        let future = mapped
+            .filter { !$0.isInProgress }
+            .map(\.event)
+            .sorted { $0.start < $1.start }
+        upcoming = Self.deduplicated(future)
     }
 
     /// Removes mirror duplicates — the same meeting appearing in multiple connected

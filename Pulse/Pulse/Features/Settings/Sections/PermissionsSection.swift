@@ -28,21 +28,6 @@ struct PermissionsSection: View {
                 Divider().background(Theme.cardStroke)
 
                 row(
-                    title: "Heart rate",
-                    detail: "Shows your latest reading as gentle context.",
-                    state: healthStateLabel,
-                    isGranted: app.health.access == .granted
-                ) {
-                    Task {
-                        if app.health.access == .unavailable { return }
-                        _ = await app.health.requestAccess()
-                        await app.health.loadLatest()
-                    }
-                }
-
-                Divider().background(Theme.cardStroke)
-
-                row(
                     title: "Notifications",
                     detail: "So you don't miss the moment.",
                     state: notifStateLabel,
@@ -60,15 +45,6 @@ struct PermissionsSection: View {
         case .denied:     "Off — open Settings"
         case .restricted: "Restricted"
         case .unknown:    "Allow"
-        }
-    }
-
-    private var healthStateLabel: String {
-        switch app.health.access {
-        case .granted:     "On"
-        case .denied:      "Off — open Settings"
-        case .unavailable: "Not available"
-        case .unknown:     "Allow"
         }
     }
 

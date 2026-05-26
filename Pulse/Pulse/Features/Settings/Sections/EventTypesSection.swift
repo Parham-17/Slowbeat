@@ -72,7 +72,7 @@ struct EventTypesSection: View {
             if settings.notificationsEnabled {
                 await app.notifier.reschedule(for: app.calendar.upcoming, minutesBefore: settings.reminderMinutesBefore)
             }
-            app.publishExternalSurfaces(settings: settings)
+            app.publishExternalSurfaces(settings: settings, modelContext: context)
         }
     }
 }

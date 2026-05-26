@@ -1,6 +1,15 @@
 import Foundation
 import SwiftData
 
+/// Where a session was recorded. Lets the History UI badge wrist-originated
+/// sessions and lets future analytics distinguish input modalities. Stored as
+/// an optional raw string so SwiftData performs a lightweight migration —
+/// existing rows read back as nil and the accessor falls back to `.iphone`.
+enum SessionSource: String, Codable {
+    case iphone
+    case watch
+}
+
 @Model
 final class BreathingSession {
     var id: UUID
@@ -11,7 +20,6 @@ final class BreathingSession {
     var eventStartAt: Date?
     var eventCategoryRaw: String
 
-    var preHeartRate: Double?
     var preMoodRaw: String?
 
     var outcomeRaw: String?
@@ -28,6 +36,10 @@ final class BreathingSession {
     /// Optional so older sessions don't need migration; nil reads as "box".
     var breathingPatternRaw: String?
 
+    /// Which device the breath happened on. Optional for back-compat with pre-source
+    /// records — those read as `.iphone` via the computed accessor below.
+    var sourceRaw: String?
+
     init(
         id: UUID = UUID(),
         startedAt: Date = .now,
@@ -35,13 +47,13 @@ final class BreathingSession {
         eventTitle: String,
         eventStartAt: Date? = nil,
         eventCategory: EventCategory = .other,
-        preHeartRate: Double? = nil,
         preMood: PreMood? = nil,
         outcome: Outcome? = nil,
         note: String? = nil,
         intentionIf: String? = nil,
         intentionThen: String? = nil,
-        breathingPatternRaw: String? = nil
+        breathingPatternRaw: String? = nil,
+        source: SessionSource = .iphone
     ) {
         self.id = id
         self.startedAt = startedAt
@@ -49,13 +61,13 @@ final class BreathingSession {
         self.eventTitle = eventTitle
         self.eventStartAt = eventStartAt
         self.eventCategoryRaw = eventCategory.rawValue
-        self.preHeartRate = preHeartRate
         self.preMoodRaw = preMood?.rawValue
         self.outcomeRaw = outcome?.rawValue
         self.note = note
         self.intentionIf = intentionIf
         self.intentionThen = intentionThen
         self.breathingPatternRaw = breathingPatternRaw
+        self.sourceRaw = source.rawValue
     }
 
     var category: EventCategory {
@@ -71,6 +83,13 @@ final class BreathingSession {
     var outcome: Outcome? {
         get { outcomeRaw.flatMap(Outcome.init(rawValue:)) }
         set { outcomeRaw = newValue?.rawValue }
+    }
+
+    /// Where this session was recorded. Defaults to `.iphone` for legacy rows
+    /// that predate the source field (their raw is nil).
+    var source: SessionSource {
+        get { sourceRaw.flatMap(SessionSource.init(rawValue:)) ?? .iphone }
+        set { sourceRaw = newValue.rawValue }
     }
 
     /// True iff the user filled in at least one half of the if-then plan.

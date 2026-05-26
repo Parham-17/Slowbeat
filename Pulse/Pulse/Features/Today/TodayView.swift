@@ -13,7 +13,6 @@ struct TodayView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     header
-                    heartLine
                     content
                 }
                 .padding(.horizontal, 22)
@@ -68,35 +67,6 @@ struct TodayView: View {
         }
     }
 
-    // MARK: Heart context line
-
-    @ViewBuilder
-    private var heartLine: some View {
-        if app.health.hasFreshReading, let bpm = app.health.latestHeartRate, let at = app.health.latestHeartRateAt {
-            HStack(spacing: 8) {
-                Image(systemName: "heart.fill")
-                    .foregroundStyle(Theme.warmA)
-                Text("\(Int(bpm)) bpm")
-                    .font(PulseType.headline(15))
-                    .foregroundStyle(Theme.inkPrimary)
-                Text("• \(relativeFromNow(at))")
-                    .font(PulseType.caption(13))
-                    .foregroundStyle(Theme.inkTertiary)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(Capsule().fill(Theme.cardFill))
-            .overlay(Capsule().strokeBorder(Theme.cardStroke, lineWidth: 0.7))
-            .accessibilityLabel("Most recent heart rate \(Int(bpm)) beats per minute, \(relativeFromNow(at))")
-        }
-    }
-
-    private func relativeFromNow(_ date: Date) -> String {
-        let minutes = max(0, Int(Date.now.timeIntervalSince(date) / 60))
-        if minutes < 1 { return "just now" }
-        if minutes < 60 { return "\(minutes) min ago" }
-        return "\(minutes / 60) h ago"
-    }
 
     // MARK: Content
 
@@ -220,7 +190,6 @@ struct TodayView: View {
     private func refresh() async {
         let s = app.ensureSettings(in: context)
         await app.calendar.loadUpcoming(monitoring: app.effectiveCategories(for: s))
-        await app.health.loadLatest()
         if s.notificationsEnabled {
             await app.notifier.reschedule(for: app.calendar.upcoming, minutesBefore: s.reminderMinutesBefore)
         }

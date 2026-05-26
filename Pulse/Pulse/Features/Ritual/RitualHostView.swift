@@ -86,7 +86,6 @@ struct RitualHostView: View {
             eventTitle: event.title,
             eventStartAt: event.start,
             eventCategory: event.suggestedCategory,
-            preHeartRate: app.health.hasFreshReading ? app.health.latestHeartRate : nil,
             preMood: preMood,
             breathingPatternRaw: pattern.key.rawValue
         )
@@ -101,6 +100,9 @@ struct RitualHostView: View {
         if event.id.hasPrefix("manual-") {
             app.clearManualPlaceholder()
         }
+        // Push the new session to the watch's Recent tab.
+        let settings = app.ensureSettings(in: context)
+        app.publishExternalSurfaces(settings: settings, modelContext: context)
         advance(to: .reflect)
     }
 

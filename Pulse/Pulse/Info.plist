@@ -35,10 +35,10 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Slowbeat reads your calendar locally to suggest a short check-in before important moments. Events stay on your device.</string>
-	<key>NSHealthShareUsageDescription</key>
-	<string>Slowbeat displays your most recent heart rate reading as gentle context before a moment. It is read-only and stays on your device.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

@@ -134,14 +134,39 @@ private struct SessionRow: View {
                     .background(Circle().fill(session.category.accent.opacity(0.85)))
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(session.eventTitle)
-                        .font(PulseType.headline(16))
-                        .foregroundStyle(Theme.inkPrimary)
-                        .lineLimit(1)
+                    // Title line. A tiny watch glyph trails the title for
+                    // sessions that originated on the wrist, so the user can
+                    // tell which device the moment came from at a glance —
+                    // without an extra row of metadata. `layoutPriority(1)`
+                    // keeps the title from being squeezed by the trailing
+                    // Reflect button, and `lineLimit(2)` is a safety net for
+                    // unusually long calendar titles that still won't fit.
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(session.eventTitle)
+                            .font(PulseType.headline(16))
+                            .foregroundStyle(Theme.inkPrimary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .layoutPriority(1)
+                        if session.source == .watch {
+                            Image(systemName: "applewatch")
+                                .font(.caption2)
+                                .foregroundStyle(Theme.inkTertiary)
+                                .accessibilityLabel("Recorded on Apple Watch")
+                        }
+                    }
+
+                    // Subtitle: pattern name leads, then relative time, then
+                    // outcome if reflected. Pattern up front because it tells
+                    // the user *what* they did; the time is secondary context.
                     HStack(spacing: 6) {
+                        Text(patternName)
+                        Text("•")
+                            .foregroundStyle(Theme.inkTertiary.opacity(0.6))
                         Text(session.startedAt.formatted(.relative(presentation: .named)))
                         if let outcome = session.outcome {
                             Text("•")
+                                .foregroundStyle(Theme.inkTertiary.opacity(0.6))
                             HStack(spacing: 4) {
                                 Image(systemName: outcome.symbol)
                                 Text(outcome.label)
@@ -151,6 +176,25 @@ private struct SessionRow: View {
                     }
                     .font(PulseType.caption(12))
                     .foregroundStyle(Theme.inkTertiary)
+
+                    // Mood pill — only shown when the user reported one.
+                    // Mirrors the watch's mood chip so the same signal reads
+                    // continuously across devices.
+                    if let mood = session.preMood {
+                        HStack(spacing: 5) {
+                            Image(systemName: mood.symbol)
+                                .font(.system(size: 10))
+                            Text(mood.label)
+                        }
+                        .font(PulseType.caption(11))
+                        .foregroundStyle(Theme.inkSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(Theme.cardFill.opacity(0.6)))
+                        .overlay(Capsule().strokeBorder(Theme.cardStroke.opacity(0.6), lineWidth: 0.5))
+                        .padding(.top, 2)
+                        .accessibilityLabel("Felt \(mood.label) before the breath")
+                    }
 
                     if let plan = intentionLine {
                         Text(plan)
@@ -190,6 +234,10 @@ private struct SessionRow: View {
         }
     }
 
+    private var patternName: String {
+        BreathingPattern.from(rawKey: session.breathingPatternRaw).name
+    }
+
     private var outcomeColor: Color {
         switch session.outcome {
         case .smooth?: Theme.coolA
@@ -211,8 +259,10 @@ private struct SessionRow: View {
     }
 
     private var accessibilityLabel: String {
-        var parts = [session.eventTitle, session.category.displayName]
+        var parts = [session.eventTitle, session.category.displayName, patternName]
+        if let mood = session.preMood { parts.append("Felt \(mood.label)") }
         if let outcome = session.outcome { parts.append("Outcome: \(outcome.label)") }
+        if session.source == .watch { parts.append("From Apple Watch") }
         return parts.joined(separator: ", ")
     }
 }
